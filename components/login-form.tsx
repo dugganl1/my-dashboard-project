@@ -63,7 +63,7 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl">Login</CardTitle>
-          <CardDescription>Enter your email below to login to your account</CardDescription>
+          <CardDescription>Enter your email below to access your account</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -184,6 +184,14 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
               >
                 Login
               </Button>
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">Or</span>
+                </div>
+              </div>
               <Button
                 variant="outline"
                 className="w-full"
@@ -194,7 +202,7 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
               <div className="mt-4 text-center text-sm">
                 Don&apos;t have an account?{" "}
                 <a
-                  href="#"
+                  href="/signup"
                   className="underline underline-offset-4"
                 >
                   Sign up
