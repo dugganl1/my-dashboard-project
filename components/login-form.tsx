@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,25 +18,13 @@ const formSchema = z.object({
     .string()
     .min(1, { message: "" }) // Empty message for required
     .email({ message: "Please enter a valid email address" }),
-  password: z
-    .string()
-    .min(1, { message: "" }) // Empty message for required
-    .refine(
-      (password) => {
-        return (
-          password.length >= 8 &&
-          /[A-Z]/.test(password) &&
-          /[0-9]/.test(password) &&
-          /[^A-Za-z0-9]/.test(password)
-        );
-      },
-      { message: "" }
-    ),
+  password: z.string().min(1, { message: "Please enter your password" }), // Simplified password validation
 });
 
 export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRef<"div">) {
   const [showPassword, setShowPassword] = useState(false);
-  const [isPasswordFocused, setIsPasswordFocused] = useState(false);
+  const [isEmailLoading, setIsEmailLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   // Initialize form
   const form = useForm<z.infer<typeof formSchema>>({
@@ -50,9 +38,27 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
   });
 
   // Handle form submission
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsEmailLoading(true);
+    try {
+      console.log(values);
+      // Add your login logic here
+      await new Promise((resolve) => setTimeout(resolve, 2000)); // Simulate API call
+    } finally {
+      setIsEmailLoading(false);
+    }
     console.log(values);
     // Add your login logic here
+  }
+
+  async function handleGoogleSignIn() {
+    setIsGoogleLoading(true);
+    try {
+      console.log("Google sign in");
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+    } finally {
+      setIsGoogleLoading(false);
+    }
   }
 
   return (
@@ -70,6 +76,7 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
             <form
               onSubmit={form.handleSubmit(onSubmit)}
               className="flex flex-col gap-6"
+              noValidate
             >
               <FormField
                 control={form.control}
@@ -80,8 +87,9 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
                     <FormControl>
                       <Input
                         {...field}
+                        disabled={isEmailLoading}
                         type="email"
-                        placeholder="m@example.com"
+                        placeholder="name@company.com"
                         onBlur={(e) => {
                           field.onBlur();
                           if (e.target.value) {
@@ -118,9 +126,9 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
                       <div className="relative">
                         <Input
                           {...field}
+                          disabled={isEmailLoading}
                           type={showPassword ? "text" : "password"}
-                          onFocus={() => setIsPasswordFocused(true)}
-                          onBlur={() => setIsPasswordFocused(false)}
+                          placeholder="••••••••"
                         />
                         <Button
                           type="button"
@@ -137,42 +145,6 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
                         </Button>
                       </div>
                     </FormControl>
-                    {(isPasswordFocused || field.value.length > 0) &&
-                      !(
-                        field.value.length >= 8 &&
-                        /[A-Z]/.test(field.value) &&
-                        /[0-9]/.test(field.value) &&
-                        /[^A-Za-z0-9]/.test(field.value)
-                      ) && (
-                        <ul className="text-sm mt-2 space-y-1">
-                          <li
-                            className={field.value.length >= 8 ? "text-green-500" : "text-red-500"}
-                          >
-                            • At least 8 characters
-                          </li>
-                          <li
-                            className={
-                              /[A-Z]/.test(field.value) ? "text-green-500" : "text-red-500"
-                            }
-                          >
-                            • One uppercase letter
-                          </li>
-                          <li
-                            className={
-                              /[0-9]/.test(field.value) ? "text-green-500" : "text-red-500"
-                            }
-                          >
-                            • One number
-                          </li>
-                          <li
-                            className={
-                              /[^A-Za-z0-9]/.test(field.value) ? "text-green-500" : "text-red-500"
-                            }
-                          >
-                            • One special character
-                          </li>
-                        </ul>
-                      )}
                     <FormMessage className="text-red-500 text-sm" />
                   </FormItem>
                 )}
@@ -181,7 +153,9 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
               <Button
                 type="submit"
                 className="w-full"
+                disabled={isEmailLoading}
               >
+                {isEmailLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Login
               </Button>
               <div className="relative">
@@ -195,7 +169,10 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
               <Button
                 variant="outline"
                 className="w-full"
+                disabled={isGoogleLoading}
+                onClick={handleGoogleSignIn}
               >
+                {isGoogleLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Login with Google
               </Button>
 

@@ -45,7 +45,8 @@ const formSchema = z.object({
 export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutRef<"div">) {
   const [showPassword, setShowPassword] = useState(false);
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isEmailLoading, setIsEmailLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -58,13 +59,23 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsLoading(true);
+    setIsEmailLoading(true);
     try {
       // This is where you'll eventually add your Supabase signup logic
       console.log("Form submission:", values);
       await new Promise((resolve) => setTimeout(resolve, 2000)); // Simulate API call
     } finally {
-      setIsLoading(false);
+      setIsEmailLoading(false);
+    }
+  }
+
+  async function handleGoogleSignUp() {
+    setIsGoogleLoading(true);
+    try {
+      console.log("Google sign up");
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+    } finally {
+      setIsGoogleLoading(false);
     }
   }
 
@@ -99,7 +110,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
                     autoCapitalize="words"
                     autoComplete="name"
                     autoCorrect="off"
-                    disabled={isLoading}
+                    disabled={isEmailLoading}
                     onChange={(e) => {
                       field.onChange(e);
                       form.clearErrors("fullName");
@@ -131,7 +142,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
                     autoCapitalize="none"
                     autoComplete="email"
                     autoCorrect="off"
-                    disabled={isLoading}
+                    disabled={isEmailLoading}
                     onChange={(e) => {
                       field.onChange(e);
                       form.clearErrors("email");
@@ -161,7 +172,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
                       id="password"
                       type={showPassword ? "text" : "password"}
                       placeholder="Password"
-                      disabled={isLoading}
+                      disabled={isEmailLoading}
                       onFocus={() => setIsPasswordFocused(true)}
                       onBlur={() => setIsPasswordFocused(false)}
                     />
@@ -171,7 +182,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
                       size="sm"
                       className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                       onClick={() => setShowPassword(!showPassword)}
-                      disabled={isLoading}
+                      disabled={isEmailLoading}
                     >
                       {showPassword ? (
                         <EyeOff className="h-4 w-4 text-muted-foreground" />
@@ -214,9 +225,9 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
 
           <Button
             type="submit"
-            disabled={isLoading}
+            disabled={isEmailLoading}
           >
-            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isEmailLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Create account
           </Button>
         </form>
@@ -234,10 +245,10 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
       <Button
         variant="outline"
         type="button"
-        disabled={isLoading}
-        onClick={() => console.log("Google sign in")}
+        disabled={isGoogleLoading}
+        onClick={handleGoogleSignUp}
       >
-        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        {isGoogleLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
         Sign up with Google
       </Button>
     </div>
