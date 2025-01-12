@@ -46,23 +46,9 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
   const [showPassword, setShowPassword] = useState(false);
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [currentStep, setCurrentStep] = useState<"initial" | "password">("initial");
 
   const form = useForm<z.infer<typeof formSchema>>({
-    resolver: async (values, context, options) => {
-      if (currentStep === "initial") {
-        // Only validate fullName and email in the first step
-        return zodResolver(
-          z.object({
-            fullName: formSchema.shape.fullName,
-            email: formSchema.shape.email,
-            password: z.string().optional(), // Make password optional in first step
-          })
-        )(values, context, options);
-      }
-      // Validate everything in the final step
-      return zodResolver(formSchema)(values, context, options);
-    },
+    resolver: zodResolver(formSchema),
     defaultValues: {
       fullName: "",
       email: "",
@@ -72,20 +58,13 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("Processing submission for step:", currentStep);
-
-    if (currentStep === "initial") {
-      console.log("Initial step submission", values);
-      setCurrentStep("password");
-    } else {
-      setIsLoading(true);
-      try {
-        // This is where you'll eventually add your Supabase signup logic
-        console.log("Final submission:", values);
-        await new Promise((resolve) => setTimeout(resolve, 2000)); // Simulate API call
-      } finally {
-        setIsLoading(false);
-      }
+    setIsLoading(true);
+    try {
+      // This is where you'll eventually add your Supabase signup logic
+      console.log("Form submission:", values);
+      await new Promise((resolve) => setTimeout(resolve, 2000)); // Simulate API call
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -120,7 +99,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
                     autoCapitalize="words"
                     autoComplete="name"
                     autoCorrect="off"
-                    disabled={isLoading || currentStep === "password"}
+                    disabled={isLoading}
                     onChange={(e) => {
                       field.onChange(e);
                       form.clearErrors("fullName");
@@ -152,7 +131,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
                     autoCapitalize="none"
                     autoComplete="email"
                     autoCorrect="off"
-                    disabled={isLoading || currentStep === "password"}
+                    disabled={isLoading}
                     onChange={(e) => {
                       field.onChange(e);
                       form.clearErrors("email");
@@ -164,87 +143,81 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
             )}
           />
 
-          {currentStep === "password" && (
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <Label
-                    className="sr-only"
-                    htmlFor="password"
-                  >
-                    Password
-                  </Label>
-                  <FormControl>
-                    <div className="relative">
-                      <Input
-                        {...field}
-                        id="password"
-                        type={showPassword ? "text" : "password"}
-                        placeholder="Password"
-                        disabled={isLoading}
-                        onFocus={() => setIsPasswordFocused(true)}
-                        onBlur={() => setIsPasswordFocused(false)}
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                        onClick={() => setShowPassword(!showPassword)}
-                        disabled={isLoading}
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <Label
+                  className="sr-only"
+                  htmlFor="password"
+                >
+                  Password
+                </Label>
+                <FormControl>
+                  <div className="relative">
+                    <Input
+                      {...field}
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Password"
+                      disabled={isLoading}
+                      onFocus={() => setIsPasswordFocused(true)}
+                      onBlur={() => setIsPasswordFocused(false)}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
+                      disabled={isLoading}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </Button>
+                  </div>
+                </FormControl>
+                {(isPasswordFocused || field.value.length > 0) &&
+                  !(
+                    field.value.length >= 8 &&
+                    /[A-Z]/.test(field.value) &&
+                    /[0-9]/.test(field.value) &&
+                    /[^A-Za-z0-9]/.test(field.value)
+                  ) && (
+                    <ul className="text-sm mt-2 space-y-1">
+                      <li className={field.value.length >= 8 ? "text-green-500" : "text-red-500"}>
+                        • At least 8 characters
+                      </li>
+                      <li className={/[A-Z]/.test(field.value) ? "text-green-500" : "text-red-500"}>
+                        • One uppercase letter
+                      </li>
+                      <li className={/[0-9]/.test(field.value) ? "text-green-500" : "text-red-500"}>
+                        • One number
+                      </li>
+                      <li
+                        className={
+                          /[^A-Za-z0-9]/.test(field.value) ? "text-green-500" : "text-red-500"
+                        }
                       >
-                        {showPassword ? (
-                          <EyeOff className="h-4 w-4 text-muted-foreground" />
-                        ) : (
-                          <Eye className="h-4 w-4 text-muted-foreground" />
-                        )}
-                      </Button>
-                    </div>
-                  </FormControl>
-                  {(isPasswordFocused || field.value.length > 0) &&
-                    !(
-                      field.value.length >= 8 &&
-                      /[A-Z]/.test(field.value) &&
-                      /[0-9]/.test(field.value) &&
-                      /[^A-Za-z0-9]/.test(field.value)
-                    ) && (
-                      <ul className="text-sm mt-2 space-y-1">
-                        <li className={field.value.length >= 8 ? "text-green-500" : "text-red-500"}>
-                          • At least 8 characters
-                        </li>
-                        <li
-                          className={/[A-Z]/.test(field.value) ? "text-green-500" : "text-red-500"}
-                        >
-                          • One uppercase letter
-                        </li>
-                        <li
-                          className={/[0-9]/.test(field.value) ? "text-green-500" : "text-red-500"}
-                        >
-                          • One number
-                        </li>
-                        <li
-                          className={
-                            /[^A-Za-z0-9]/.test(field.value) ? "text-green-500" : "text-red-500"
-                          }
-                        >
-                          • One special character
-                        </li>
-                      </ul>
-                    )}
-                  <FormMessage className="text-red-500 text-sm" />
-                </FormItem>
-              )}
-            />
-          )}
+                        • One special character
+                      </li>
+                    </ul>
+                  )}
+                <FormMessage className="text-red-500 text-sm" />
+              </FormItem>
+            )}
+          />
 
           <Button
             type="submit"
             disabled={isLoading}
           >
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {currentStep === "initial" ? "Continue" : "Create account"}
+            Create account
           </Button>
         </form>
       </Form>
