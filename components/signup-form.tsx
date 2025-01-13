@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { signup } from "@/app/auth/actions";
 
 const formSchema = z.object({
   fullName: z
@@ -61,9 +62,15 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsEmailLoading(true);
     try {
-      // This is where you'll eventually add your Supabase signup logic
       console.log("Form submission:", values);
-      await new Promise((resolve) => setTimeout(resolve, 2000)); // Simulate API call
+
+      //Supabase signup logic
+      const formData = new FormData();
+      formData.append("email", values.email);
+      formData.append("password", values.password);
+      formData.append("fullName", values.fullName);
+
+      await signup(formData);
     } finally {
       setIsEmailLoading(false);
     }

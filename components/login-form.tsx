@@ -11,6 +11,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
+import { login } from "@/app/auth/actions";
+import Link from "next/link";
 
 // Define the form schema with Zod
 const formSchema = z.object({
@@ -43,7 +45,11 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
     try {
       console.log(values);
       // Add your login logic here
-      await new Promise((resolve) => setTimeout(resolve, 2000)); // Simulate API call
+      const formData = new FormData();
+      formData.append("email", values.email);
+      formData.append("password", values.password);
+
+      await login(formData);
     } finally {
       setIsEmailLoading(false);
     }
@@ -178,12 +184,12 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
 
               <div className="mt-4 text-center text-sm">
                 Don&apos;t have an account?{" "}
-                <a
-                  href="/signup"
+                <Link
+                  href="/auth/signup"
                   className="underline underline-offset-4"
                 >
                   Sign up
-                </a>
+                </Link>
               </div>
             </form>
           </Form>
