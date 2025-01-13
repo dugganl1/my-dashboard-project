@@ -1,29 +1,44 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
-import { login } from "@/app/auth/actions";
-import Link from "next/link";
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from '@/components/ui/form';
+import { login } from '@/app/auth/actions';
+import Link from 'next/link';
 
 // Define the form schema with Zod
 const formSchema = z.object({
   email: z
     .string()
-    .min(1, { message: "" }) // Empty message for required
-    .email({ message: "Please enter a valid email address" }),
-  password: z.string().min(1, { message: "Please enter your password" }), // Simplified password validation
+    .min(1, { message: '' }) // Empty message for required
+    .email({ message: 'Please enter a valid email address' }),
+  password: z.string().min(1, { message: 'Please enter your password' }), // Simplified password validation
 });
 
-export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRef<"div">) {
+export function LoginForm({
+  className,
+  ...props
+}: React.ComponentPropsWithoutRef<'div'>) {
   const [showPassword, setShowPassword] = useState(false);
   const [isEmailLoading, setIsEmailLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
@@ -32,11 +47,11 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: "",
-      password: "",
+      email: '',
+      password: '',
     },
-    mode: "onSubmit", // Only validate on submit
-    reValidateMode: "onChange", // But revalidate on change after submit
+    mode: 'onSubmit', // Only validate on submit
+    reValidateMode: 'onChange', // But revalidate on change after submit
   });
 
   // Handle form submission
@@ -46,8 +61,8 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
       console.log(values);
       // Add your login logic here
       const formData = new FormData();
-      formData.append("email", values.email);
-      formData.append("password", values.password);
+      formData.append('email', values.email);
+      formData.append('password', values.password);
 
       await login(formData);
     } finally {
@@ -60,7 +75,7 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
   async function handleGoogleSignIn() {
     setIsGoogleLoading(true);
     try {
-      console.log("Google sign in");
+      console.log('Google sign in');
       await new Promise((resolve) => setTimeout(resolve, 2000));
     } finally {
       setIsGoogleLoading(false);
@@ -68,14 +83,13 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
   }
 
   return (
-    <div
-      className={cn("flex flex-col gap-6", className)}
-      {...props}
-    >
+    <div className={cn('flex flex-col gap-6', className)} {...props}>
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl">Login</CardTitle>
-          <CardDescription>Enter your email below to access your account</CardDescription>
+          <CardDescription>
+            Enter your email below to access your account
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -99,13 +113,13 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
                         onBlur={(e) => {
                           field.onBlur();
                           if (e.target.value) {
-                            form.trigger("email");
+                            form.trigger('email');
                           }
                         }}
                         onChange={(e) => {
                           field.onChange(e);
                           // Clear any existing errors when user starts typing again
-                          form.clearErrors("email");
+                          form.clearErrors('email');
                         }}
                       />
                     </FormControl>
@@ -133,7 +147,7 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
                         <Input
                           {...field}
                           disabled={isEmailLoading}
-                          type={showPassword ? "text" : "password"}
+                          type={showPassword ? 'text' : 'password'}
                           placeholder="••••••••"
                         />
                         <Button
@@ -161,7 +175,9 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
                 className="w-full"
                 disabled={isEmailLoading}
               >
-                {isEmailLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isEmailLoading && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
                 Login
               </Button>
               <div className="relative">
@@ -169,7 +185,9 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
                   <span className="w-full border-t" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">Or</span>
+                  <span className="bg-background px-2 text-muted-foreground">
+                    Or
+                  </span>
                 </div>
               </div>
               <Button
@@ -178,12 +196,14 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
                 disabled={isGoogleLoading}
                 onClick={handleGoogleSignIn}
               >
-                {isGoogleLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isGoogleLoading && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
                 Login with Google
               </Button>
 
               <div className="mt-4 text-center text-sm">
-                Don&apos;t have an account?{" "}
+                Don&apos;t have an account?{' '}
                 <Link
                   href="/auth/signup"
                   className="underline underline-offset-4"

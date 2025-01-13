@@ -1,9 +1,9 @@
-"use server";
+'use server';
 
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import { z } from "zod";
+import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
+import { createClient } from '@/lib/supabase/server';
+import { z } from 'zod';
 
 // Define server-side validation schemas
 const loginSchema = z.object({
@@ -16,27 +16,27 @@ const signupSchema = z.object({
   password: z
     .string()
     .min(8)
-    .regex(/[A-Z]/, "Must contain uppercase")
-    .regex(/[0-9]/, "Must contain number")
-    .regex(/[^A-Za-z0-9]/, "Must contain special character"),
+    .regex(/[A-Z]/, 'Must contain uppercase')
+    .regex(/[0-9]/, 'Must contain number')
+    .regex(/[^A-Za-z0-9]/, 'Must contain special character'),
   fullName: z
     .string()
     .min(1)
     .refine((name) => name.trim().split(/\s+/).length >= 2, {
-      message: "Please enter both first and last name",
+      message: 'Please enter both first and last name',
     }),
 });
 
 export async function login(formData: FormData) {
   // Server-side validation
   const result = loginSchema.safeParse({
-    email: formData.get("email"),
-    password: formData.get("password"),
+    email: formData.get('email'),
+    password: formData.get('password'),
   });
 
   if (!result.success) {
     // You could handle validation errors differently here
-    redirect("/error");
+    redirect('/error');
   }
 
   const supabase = await createClient();
@@ -51,24 +51,24 @@ export async function login(formData: FormData) {
   const { error } = await supabase.auth.signInWithPassword(data);
 
   if (error) {
-    redirect("/error");
+    redirect('/error');
   }
 
-  revalidatePath("/", "layout");
-  redirect("/dashboard"); // or '/' if you prefer
+  revalidatePath('/', 'layout');
+  redirect('/dashboard'); // or '/' if you prefer
 }
 
 export async function signup(formData: FormData) {
   // Server-side validation
   const result = signupSchema.safeParse({
-    email: formData.get("email"),
-    password: formData.get("password"),
-    fullName: formData.get("fullName"),
+    email: formData.get('email'),
+    password: formData.get('password'),
+    fullName: formData.get('fullName'),
   });
 
   if (!result.success) {
-    console.error("Validation error:", result.error);
-    redirect("/error");
+    console.error('Validation error:', result.error);
+    redirect('/error');
   }
 
   const supabase = await createClient();
@@ -83,7 +83,7 @@ export async function signup(formData: FormData) {
     },
   };
 
-  console.log("Attempting signup with:", {
+  console.log('Attempting signup with:', {
     email: data.email,
     // Don't log password
     options: data.options,
@@ -92,10 +92,10 @@ export async function signup(formData: FormData) {
   const { error } = await supabase.auth.signUp(data);
 
   if (error) {
-    console.error("Supabase signup error:", error);
-    redirect("/error");
+    console.error('Supabase signup error:', error);
+    redirect('/error');
   }
 
-  revalidatePath("/", "layout");
-  redirect("/verify-email");
+  revalidatePath('/', 'layout');
+  redirect('/verify-email');
 }

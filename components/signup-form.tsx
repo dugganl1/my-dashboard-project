@@ -1,35 +1,41 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
-import { signup } from "@/app/auth/actions";
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from '@/components/ui/form';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { signup } from '@/app/auth/actions';
 
 const formSchema = z.object({
   fullName: z
     .string()
-    .min(1, { message: "" })
+    .min(1, { message: '' })
     .refine(
       (name) => {
         const words = name.trim().split(/\s+/);
         return words.length >= 2;
       },
-      { message: "Please enter both your first and last name" }
+      { message: 'Please enter both your first and last name' }
     ),
   email: z
     .string()
-    .min(1, { message: "" })
-    .email({ message: "Please enter a valid email address" }),
+    .min(1, { message: '' })
+    .email({ message: 'Please enter a valid email address' }),
   password: z
     .string()
-    .min(1, { message: "" })
+    .min(1, { message: '' })
     .refine(
       (password) => {
         return (
@@ -39,11 +45,14 @@ const formSchema = z.object({
           /[^A-Za-z0-9]/.test(password)
         );
       },
-      { message: "" }
+      { message: '' }
     ),
 });
 
-export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutRef<"div">) {
+export function SignUpForm({
+  className,
+  ...props
+}: React.ComponentPropsWithoutRef<'div'>) {
   const [showPassword, setShowPassword] = useState(false);
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
   const [isEmailLoading, setIsEmailLoading] = useState(false);
@@ -52,23 +61,23 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      fullName: "",
-      email: "",
-      password: "",
+      fullName: '',
+      email: '',
+      password: '',
     },
-    mode: "onSubmit",
+    mode: 'onSubmit',
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsEmailLoading(true);
     try {
-      console.log("Form submission:", values);
+      console.log('Form submission:', values);
 
       //Supabase signup logic
       const formData = new FormData();
-      formData.append("email", values.email);
-      formData.append("password", values.password);
-      formData.append("fullName", values.fullName);
+      formData.append('email', values.email);
+      formData.append('password', values.password);
+      formData.append('fullName', values.fullName);
 
       await signup(formData);
     } finally {
@@ -79,7 +88,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
   async function handleGoogleSignUp() {
     setIsGoogleLoading(true);
     try {
-      console.log("Google sign up");
+      console.log('Google sign up');
       await new Promise((resolve) => setTimeout(resolve, 2000));
     } finally {
       setIsGoogleLoading(false);
@@ -87,10 +96,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
   }
 
   return (
-    <div
-      className={cn("grid gap-6", className)}
-      {...props}
-    >
+    <div className={cn('grid gap-6', className)} {...props}>
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
@@ -102,10 +108,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
             name="fullName"
             render={({ field }) => (
               <FormItem>
-                <Label
-                  className="sr-only"
-                  htmlFor="fullName"
-                >
+                <Label className="sr-only" htmlFor="fullName">
                   Full name
                 </Label>
                 <FormControl>
@@ -120,7 +123,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
                     disabled={isEmailLoading}
                     onChange={(e) => {
                       field.onChange(e);
-                      form.clearErrors("fullName");
+                      form.clearErrors('fullName');
                     }}
                   />
                 </FormControl>
@@ -134,10 +137,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
             name="email"
             render={({ field }) => (
               <FormItem>
-                <Label
-                  className="sr-only"
-                  htmlFor="email"
-                >
+                <Label className="sr-only" htmlFor="email">
                   Email
                 </Label>
                 <FormControl>
@@ -152,7 +152,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
                     disabled={isEmailLoading}
                     onChange={(e) => {
                       field.onChange(e);
-                      form.clearErrors("email");
+                      form.clearErrors('email');
                     }}
                   />
                 </FormControl>
@@ -166,10 +166,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
             name="password"
             render={({ field }) => (
               <FormItem>
-                <Label
-                  className="sr-only"
-                  htmlFor="password"
-                >
+                <Label className="sr-only" htmlFor="password">
                   Password
                 </Label>
                 <FormControl>
@@ -177,7 +174,7 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
                     <Input
                       {...field}
                       id="password"
-                      type={showPassword ? "text" : "password"}
+                      type={showPassword ? 'text' : 'password'}
                       placeholder="Password"
                       disabled={isEmailLoading}
                       onFocus={() => setIsPasswordFocused(true)}
@@ -207,18 +204,38 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
                     /[^A-Za-z0-9]/.test(field.value)
                   ) && (
                     <ul className="text-sm mt-2 space-y-1">
-                      <li className={field.value.length >= 8 ? "text-green-500" : "text-red-500"}>
+                      <li
+                        className={
+                          field.value.length >= 8
+                            ? 'text-green-500'
+                            : 'text-red-500'
+                        }
+                      >
                         • At least 8 characters
                       </li>
-                      <li className={/[A-Z]/.test(field.value) ? "text-green-500" : "text-red-500"}>
+                      <li
+                        className={
+                          /[A-Z]/.test(field.value)
+                            ? 'text-green-500'
+                            : 'text-red-500'
+                        }
+                      >
                         • One uppercase letter
                       </li>
-                      <li className={/[0-9]/.test(field.value) ? "text-green-500" : "text-red-500"}>
+                      <li
+                        className={
+                          /[0-9]/.test(field.value)
+                            ? 'text-green-500'
+                            : 'text-red-500'
+                        }
+                      >
                         • One number
                       </li>
                       <li
                         className={
-                          /[^A-Za-z0-9]/.test(field.value) ? "text-green-500" : "text-red-500"
+                          /[^A-Za-z0-9]/.test(field.value)
+                            ? 'text-green-500'
+                            : 'text-red-500'
                         }
                       >
                         • One special character
@@ -230,11 +247,10 @@ export function SignUpForm({ className, ...props }: React.ComponentPropsWithoutR
             )}
           />
 
-          <Button
-            type="submit"
-            disabled={isEmailLoading}
-          >
-            {isEmailLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          <Button type="submit" disabled={isEmailLoading}>
+            {isEmailLoading && (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            )}
             Create account
           </Button>
         </form>
