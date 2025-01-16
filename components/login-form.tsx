@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/form';
 import { login } from '@/app/auth/actions';
 import Link from 'next/link';
+import { signInWithGoogle } from '@/app/auth/actions';
 
 // Define the form schema with Zod
 const formSchema = z.object({
@@ -75,8 +76,10 @@ export function LoginForm({
   async function handleGoogleSignIn() {
     setIsGoogleLoading(true);
     try {
-      console.log('Google sign in');
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await signInWithGoogle();
+    } catch (error) {
+      console.error('Google sign in error:', error);
+      // Handle error appropriately
     } finally {
       setIsGoogleLoading(false);
     }

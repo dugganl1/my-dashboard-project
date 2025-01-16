@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/form';
 import Link from 'next/link';
 import { signup } from '@/app/auth/actions';
+import { signInWithGoogle } from '@/app/auth/actions';
 
 const formSchema = z.object({
   fullName: z
@@ -89,8 +90,12 @@ export function SignUpForm({
   async function handleGoogleSignUp() {
     setIsGoogleLoading(true);
     try {
-      console.log('Google sign up');
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await signInWithGoogle();
+      // Note: we don't need to handle the redirect here as the signInWithGoogle
+      // function will handle that for us
+    } catch (error) {
+      console.error('Google sign up error:', error);
+      // You might want to show an error message to the user here
     } finally {
       setIsGoogleLoading(false);
     }

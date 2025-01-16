@@ -99,3 +99,28 @@ export async function signup(formData: FormData) {
   revalidatePath('/', 'layout');
   redirect('/verify-email');
 }
+
+export async function signInWithGoogle() {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
+      queryParams: {
+        access_type: 'offline',
+        prompt: 'consent',
+      },
+    },
+  });
+
+  if (error) {
+    console.error('Google auth error:', error);
+    redirect('/error');
+  }
+
+  // If successful, supabase will redirect to the URL we specified
+  if (data.url) {
+    redirect(data.url);
+  }
+}
