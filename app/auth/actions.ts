@@ -31,6 +31,15 @@ const resetPasswordSchema = z.object({
   email: z.string().email(),
 });
 
+const updatePasswordSchema = z.object({
+  password: z
+    .string()
+    .min(8)
+    .regex(/[A-Z]/, 'Must contain uppercase')
+    .regex(/[0-9]/, 'Must contain number')
+    .regex(/[^A-Za-z0-9]/, 'Must contain special character'),
+});
+
 export async function login(formData: FormData) {
   // Server-side validation
   const result = loginSchema.safeParse({
@@ -154,4 +163,43 @@ export async function resetPassword(formData: FormData) {
   }
 
   redirect('/auth/check-email');
+}
+
+export async function updatePassword(formData: FormData) {
+  // Server-side validation
+  const result = updatePasswordSchema.safeParse({
+    password: formData.get('password'),
+  });
+
+  if (!result.success) {
+    redirect('/error');
+  }
+
+  const supabase = await createClient();
+
+  // Verify the user's session first
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    console.error('User verification error:', userError);
+    redirect('/auth/login');
+  }
+
+  const { error } = await supabase.auth.updateUser({
+    password: result.data.password,
+  });
+
+  if (error) {
+    console.error('Password update error:', error);
+    redirect('/error');
+  }
+
+  // Sign out the user after password update
+  await supabase.auth.signOut();
+
+  revalidatePath('/', 'layout');
+  redirect('/auth/login?message=password-updated');
 }
