@@ -27,6 +27,10 @@ const signupSchema = z.object({
     }),
 });
 
+const resetPasswordSchema = z.object({
+  email: z.string().email(),
+});
+
 export async function login(formData: FormData) {
   // Server-side validation
   const result = loginSchema.safeParse({
@@ -123,4 +127,31 @@ export async function signInWithGoogle() {
   if (data.url) {
     redirect(data.url);
   }
+}
+
+export async function resetPassword(formData: FormData) {
+  // Server-side validation
+  const result = resetPasswordSchema.safeParse({
+    email: formData.get('email'),
+  });
+
+  if (!result.success) {
+    redirect('/error');
+  }
+
+  const supabase = await createClient();
+
+  const { error } = await supabase.auth.resetPasswordForEmail(
+    result.data.email,
+    {
+      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/update-password`,
+    }
+  );
+
+  if (error) {
+    console.error('Password reset error:', error);
+    redirect('/error');
+  }
+
+  redirect('/auth/check-email');
 }
