@@ -41,6 +41,8 @@ const updatePasswordSchema = z.object({
 });
 
 export async function login(formData: FormData) {
+  const redirectTo = formData.get('redirectTo') as string;
+
   // Server-side validation
   const result = loginSchema.safeParse({
     email: formData.get('email'),
@@ -48,27 +50,26 @@ export async function login(formData: FormData) {
   });
 
   if (!result.success) {
-    // You could handle validation errors differently here
-    redirect('/error');
+    redirect('/auth/login?error=validation');
   }
 
   const supabase = await createClient();
 
-  // type-casting here for convenience
-  // in practice, you should validate your inputs
-  const data = {
+  const { error } = await supabase.auth.signInWithPassword({
     email: result.data.email,
     password: result.data.password,
-  };
-
-  const { error } = await supabase.auth.signInWithPassword(data);
+  });
 
   if (error) {
-    redirect('/error');
+    // Add specific error handling
+    const errorCode = error.message.includes('credentials')
+      ? 'invalid-credentials'
+      : 'unknown';
+    redirect(`/auth/login?error=${errorCode}`);
   }
 
   revalidatePath('/', 'layout');
-  redirect('/dashboard'); // or '/' if you prefer
+  redirect(redirectTo || '/dashboard');
 }
 
 export async function signup(formData: FormData) {
