@@ -11,6 +11,7 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from '@/components/ui/navigation-menu';
+import { AuthButtons } from './auth-buttons';
 
 const features = [
   {
@@ -96,12 +97,7 @@ export function NavBar() {
           </div>
           {/* Right: Auth Buttons */}
           <div className="hidden md:flex items-center gap-2 flex-shrink-0">
-            <Button variant="ghost" asChild>
-              <Link href="/auth/login">Sign in</Link>
-            </Button>
-            <Button asChild>
-              <Link href="/auth/signup">Get started</Link>
-            </Button>
+            <AuthButtons />
           </div>
 
           {/* Mobile Menu Button - Moved outside the nav structure */}
@@ -166,18 +162,7 @@ export function NavBar() {
                   >
                     About
                   </Link>
-                  <Link
-                    href="/auth/login"
-                    className="block rounded-md px-3 py-2 text-base font-medium text-foreground hover:bg-accent"
-                  >
-                    Sign in
-                  </Link>
-                  <Link
-                    href="/auth/signup"
-                    className="block rounded-md px-3 py-2 text-base font-medium text-foreground hover:bg-accent"
-                  >
-                    Get started
-                  </Link>
+                  <AuthButtons isMobile />
                 </div>
               </div>
             </div>
