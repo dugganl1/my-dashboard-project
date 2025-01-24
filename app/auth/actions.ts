@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
+import { cookies } from 'next/headers';
 
 // Define server-side validation schemas
 const loginSchema = z.object({
@@ -87,7 +88,7 @@ export async function signup(formData: FormData) {
 
   const supabase = await createClient();
 
-  const data = {
+  const signUpData = {
     email: result.data.email,
     password: result.data.password,
     options: {
@@ -98,20 +99,33 @@ export async function signup(formData: FormData) {
   };
 
   console.log('Attempting signup with:', {
-    email: data.email,
+    email: signUpData.email,
     // Don't log password
-    options: data.options,
+    options: signUpData.options,
   });
 
-  const { error } = await supabase.auth.signUp(data);
+  const { error, data: userData } = await supabase.auth.signUp(signUpData);
 
   if (error) {
     console.error('Supabase signup error:', error);
     redirect('/error');
   }
 
+  // Store the email in the session for reference
+  const cookieStore = cookies();
+  cookieStore.set('pending_verification_email', userData?.user?.email ?? '', {
+    // Cookie options must match ResponseCookie type
+    value: userData?.user?.email ?? '',
+    name: 'pending_verification_email',
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 60 * 30, // 30 minutes
+    path: '/',
+  });
+
   revalidatePath('/', 'layout');
-  redirect('/verify-email');
+  redirect('/auth/verify-email');
 }
 
 export async function signInWithGoogle() {
@@ -203,4 +217,25 @@ export async function updatePassword(formData: FormData) {
 
   revalidatePath('/', 'layout');
   redirect('/auth/login?message=password-updated');
+}
+
+export async function resendVerificationEmail() {
+  const supabase = await createClient();
+  const session = cookies();
+  const email = session.get('pending_verification_email')?.value;
+
+  if (!email) {
+    redirect('/auth/signup');
+  }
+
+  const { error } = await supabase.auth.resend({
+    type: 'signup',
+    email,
+  });
+
+  if (error) {
+    redirect('/auth/verify-email?error=failed-to-resend');
+  }
+
+  redirect('/auth/verify-email?message=verification-email-sent');
 }

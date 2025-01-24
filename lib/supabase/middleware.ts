@@ -43,6 +43,13 @@ export async function updateSession(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
+  // Check if user exists but email isn't verified
+  if (user && !user.confirmed_at && pathname.startsWith('/dashboard')) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/auth/verify-email';
+    return NextResponse.redirect(url);
+  }
+
   // Check for protected and auth routes
   const isDashboardRoute = pathname.startsWith('/dashboard');
   const isAuthRoute = pathname.startsWith('/auth');
