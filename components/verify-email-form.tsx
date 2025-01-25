@@ -14,7 +14,7 @@ export function VerifyEmailForm() {
       <CardContent className="space-y-4">
         <p className="text-muted-foreground">
           We&apos;ve sent a verification link to your email address. It should
-          arrive in the next minute or too.
+          arrive in the next minute or two.
         </p>
         <p className="text-muted-foreground">
           Can&apos;t see it? Check your spam folder or request a new link below.

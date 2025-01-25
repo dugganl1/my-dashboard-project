@@ -5,49 +5,62 @@ import { redirect } from 'next/navigation';
 import { Resend } from 'resend';
 import { EmailTemplate } from '@/components/email-templates/email-template';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Add comprehensive debugging for environment variables
+console.log('Available environment variables:', Object.keys(process.env));
+console.log('RESEND_API_KEY exists:', !!process.env.RESEND_API_KEY);
+console.log('RESEND_API_KEY type:', typeof process.env.RESEND_API_KEY);
+console.log('RESEND_API_KEY length:', process.env.RESEND_API_KEY?.length);
 
-//This step handles what happens after a user clicks the confirmation link in their email.
+let resend: Resend | undefined;
+try {
+  if (process.env.RESEND_API_KEY) {
+    resend = new Resend(process.env.RESEND_API_KEY);
+  }
+} catch (error) {
+  console.error('Failed to initialize Resend:', error);
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const token_hash = searchParams.get('token_hash');
   const type = searchParams.get('type') as EmailOtpType | null;
-  const next = searchParams.get('next') ?? '/';
+  const next = searchParams.get('next') ?? '/dashboard'; // Default to dashboard
 
-  if (token_hash && type) {
-    const supabase = await createClient();
-    const { error } = await supabase.auth.verifyOtp({
-      type,
-      token_hash,
-    });
-    if (!error) {
-      // Get user details after successful verification
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+  if (!token_hash || !type) {
+    redirect('/auth/login?error=invalid-link');
+  }
 
-      if (user) {
-        try {
-          // Send welcome email
-          await resend.emails.send({
-            from: 'Acme <onboarding@resend.dev>',
-            to: user.email!,
-            subject: 'Welcome to Acme!',
-            react: EmailTemplate({
-              firstName:
-                user.user_metadata?.full_name?.split(' ')[0] || 'there',
-            }),
-          });
-        } catch (emailError) {
-          // Log error but don't block the verification process
-          console.error('Failed to send welcome email:', emailError);
-        }
-      }
+  const supabase = await createClient();
+  const { error } = await supabase.auth.verifyOtp({
+    type,
+    token_hash,
+  });
 
-      // redirect user to specified redirect URL or root of app
-      redirect(next);
+  if (error) {
+    console.error('Verification error:', error);
+    redirect('/auth/login?error=verification-failed');
+  }
+
+  // Get user details after successful verification
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user && resend) {
+    try {
+      await resend.emails.send({
+        from: 'Acme <onboarding@resend.dev>',
+        to: user.email!,
+        subject: 'Welcome to Acme!',
+        react: EmailTemplate({
+          firstName: user.user_metadata?.full_name?.split(' ')[0] || 'there',
+        }),
+      });
+    } catch (emailError) {
+      console.error('Failed to send welcome email:', emailError);
     }
   }
-  // redirect the user to an error page with some instructions
-  redirect('/error');
+
+  // Always redirect to dashboard on success
+  redirect('/dashboard');
 }
