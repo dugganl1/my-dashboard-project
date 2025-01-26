@@ -239,3 +239,34 @@ export async function resendVerificationEmail() {
 
   redirect('/auth/verify-email?message=verification-email-sent');
 }
+
+export async function savePlanSelection(formData: FormData) {
+  const supabase = await createClient();
+
+  // Get the current user
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    console.error('User not found:', userError);
+    redirect('/auth/login');
+  }
+
+  // Save the plan selection to your database
+  const { error } = await supabase.from('subscriptions').upsert({
+    user_id: user.id,
+    plan: formData.get('plan'),
+    billing_cycle: formData.get('billingCycle'),
+    // Add other relevant fields like status, dates, etc.
+  });
+
+  if (error) {
+    console.error('Error saving plan selection:', error);
+    redirect('/error');
+  }
+
+  // Redirect to dashboard or payment processing
+  redirect('/dashboard');
+}

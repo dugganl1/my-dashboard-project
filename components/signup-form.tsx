@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Eye, EyeOff, Loader2, GalleryVerticalEnd } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -20,6 +20,7 @@ import {
 import Link from 'next/link';
 import { signup } from '@/app/auth/actions';
 import { signInWithGoogle } from '@/app/auth/actions';
+import { useRouter } from 'next/navigation';
 
 const formSchema = z.object({
   fullName: z
@@ -56,6 +57,7 @@ export function SignUpForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<'div'>) {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
   const [isEmailLoading, setIsEmailLoading] = useState(false);
@@ -74,14 +76,15 @@ export function SignUpForm({
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsEmailLoading(true);
     try {
-      console.log('Form submission:', values);
-
       const formData = new FormData();
       formData.append('email', values.email);
       formData.append('password', values.password);
       formData.append('fullName', values.fullName);
 
       await signup(formData);
+      router.push('/auth/signup/plan');
+    } catch (error) {
+      console.error('Signup error:', error);
     } finally {
       setIsEmailLoading(false);
     }
@@ -91,11 +94,8 @@ export function SignUpForm({
     setIsGoogleLoading(true);
     try {
       await signInWithGoogle();
-      // Note: we don't need to handle the redirect here as the signInWithGoogle
-      // function will handle that for us
     } catch (error) {
       console.error('Google sign up error:', error);
-      // You might want to show an error message to the user here
     } finally {
       setIsGoogleLoading(false);
     }
