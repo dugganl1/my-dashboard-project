@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { Resend } from 'resend';
 import { EmailTemplate } from '@/components/email-templates/email-template';
-import { createCheckoutSession } from '@/lib/stripe/actions';
+import { createCheckoutSession } from '@/app/api/stripe/actions';
 
 // Add comprehensive debugging for environment variables
 console.log('Available environment variables:', Object.keys(process.env));

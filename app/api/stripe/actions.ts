@@ -12,14 +12,35 @@ interface CreateCheckoutSessionData {
 }
 
 export async function getPlanPriceId(planId: string, isYearly: boolean) {
+  console.log('Server Action - Environment Variables:', {
+    monthly: process.env.STRIPE_PRICE_MONTHLY_SUB_MONTHLY,
+    yearly: process.env.STRIPE_PRICE_MONTHLY_SUB_YEARLY,
+    dayPass: process.env.STRIPE_PRICE_DAY_PASS,
+    lifetime: process.env.STRIPE_PRICE_LIFETIME,
+  });
+
+  console.log('Server Action - Input:', { planId, isYearly });
+
   const plan = STRIPE_PLANS[planId];
-  if (!plan) throw new Error('Invalid plan selected');
+  console.log('Server Action - Selected Plan:', plan);
+
+  if (!plan) {
+    console.error('Plan not found:', planId);
+    throw new Error('Invalid plan selected');
+  }
 
   let priceId: string;
   if (typeof plan.stripePriceId === 'string') {
     priceId = plan.stripePriceId;
   } else {
     priceId = isYearly ? plan.stripePriceId.yearly : plan.stripePriceId.monthly;
+  }
+
+  console.log('Server Action - Final priceId:', priceId);
+
+  if (!priceId) {
+    console.error('Price ID is undefined for plan:', planId);
+    throw new Error(`No price ID found for plan: ${planId}`);
   }
 
   return priceId;

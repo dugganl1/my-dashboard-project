@@ -1,3 +1,10 @@
+console.log('Loading server config with env vars:', {
+  monthly: process.env.STRIPE_PRICE_MONTHLY_SUB_MONTHLY,
+  yearly: process.env.STRIPE_PRICE_MONTHLY_SUB_YEARLY,
+  dayPass: process.env.STRIPE_PRICE_DAY_PASS,
+  lifetime: process.env.STRIPE_PRICE_LIFETIME,
+});
+
 interface Plan {
   name: string;
   type: 'one_time' | 'subscription';
