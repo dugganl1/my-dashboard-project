@@ -7,46 +7,71 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
+import { Loader2 } from 'lucide-react';
+import {
+  createCheckoutSession,
+  getPlanPriceId,
+} from '@/app/api/stripe/actions';
+import { STRIPE_PLANS } from '@/lib/stripe/config';
 
 interface PlanSelectionFormProps {
-  onSubmit: (data: {
-    planId: string;
-    billingCycle: 'monthly' | 'yearly';
-  }) => void;
   className?: string;
 }
 
-export function PlanSelectionForm({
-  onSubmit,
-  className,
-}: PlanSelectionFormProps) {
-  const plans = [
-    {
-      id: 'day-pass',
-      name: 'Day Pass',
-      price: { monthly: 9.99, yearly: 99.99 },
-    },
-    {
-      id: 'monthly-sub',
-      name: 'Monthly Subscription',
-      price: { monthly: 29.99, yearly: 299.99 },
-    },
-    {
-      id: 'lifetime',
-      name: 'Lifetime Membership',
-      price: { monthly: 299.99, yearly: 2999.99 },
-    },
-  ];
-
-  const [selectedPlan, setSelectedPlan] = useState('monthly-sub');
+export function PlanSelectionForm({ className }: PlanSelectionFormProps) {
+  const [selectedPlan, setSelectedPlan] = useState('MONTHLY_SUB');
   const [isYearly, setIsYearly] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const plans = Object.entries(STRIPE_PLANS).map(([id, plan]) => ({
+    id,
+    name: plan.name,
+    price: plan.price,
+  }));
+
+  const getPrice = (plan: (typeof plans)[0]) => {
+    if (typeof plan.price === 'number') {
+      return plan.price;
+    }
+    return isYearly ? plan.price.yearly : plan.price.monthly;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({
-      planId: selectedPlan,
-      billingCycle: isYearly ? 'yearly' : 'monthly',
-    });
+    setIsLoading(true);
+
+    try {
+      console.log('Form submission - Selected plan:', {
+        selectedPlan,
+        isYearly,
+      });
+
+      const priceId = await getPlanPriceId(selectedPlan, isYearly);
+      console.log('Received priceId:', priceId);
+
+      if (!priceId) {
+        throw new Error('Failed to get price ID');
+      }
+
+      const searchParams = new URLSearchParams({
+        plan: selectedPlan,
+        priceId: priceId,
+        billingCycle: isYearly ? 'yearly' : 'monthly',
+      });
+
+      const redirectUrl = `/auth/signup?${searchParams.toString()}`;
+      console.log('Redirecting to:', redirectUrl);
+      window.location.href = redirectUrl;
+    } catch (error) {
+      console.error('Error in form submission:', error);
+      if (error instanceof Error) {
+        console.error('Error details:', error.message);
+        console.error('Error stack:', error.stack);
+      }
+      alert(error instanceof Error ? error.message : 'An error occurred');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -132,9 +157,11 @@ export function PlanSelectionForm({
                       <div className="flex justify-between items-center">
                         <span className="font-medium">{plan.name}</span>
                         <div className="font-medium">
-                          ${isYearly ? plan.price.yearly : plan.price.monthly}
+                          ${getPrice(plan)}
                           <span className="text-sm text-muted-foreground ml-1">
-                            /{isYearly ? 'year' : 'month'}
+                            {typeof plan.price === 'number'
+                              ? ''
+                              : `/${isYearly ? 'year' : 'month'}`}
                           </span>
                         </div>
                       </div>
@@ -143,8 +170,15 @@ export function PlanSelectionForm({
                 ))}
               </RadioGroup>
 
-              <Button type="submit" className="w-full">
-                Continue
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Redirecting to secure checkout...
+                  </>
+                ) : (
+                  'Continue to secure checkout'
+                )}
               </Button>
             </div>
           </form>

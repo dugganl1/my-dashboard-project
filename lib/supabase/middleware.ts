@@ -45,9 +45,9 @@ export async function updateSession(request: NextRequest) {
 
   // Check if user exists but email isn't verified
   if (user && !user.confirmed_at && pathname.startsWith('/dashboard')) {
-    const url = request.nextUrl.clone();
-    url.pathname = '/auth/verify-email';
-    return NextResponse.redirect(url);
+    // Instead of redirecting, just let them through
+    // Only block specific premium features that require verification
+    return supabaseResponse;
   }
 
   // Check for protected and auth routes

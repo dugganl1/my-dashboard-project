@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { AppSidebar } from '@/components/app-sidebar';
+import { VerificationBanner } from '@/components/verification_banner';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -31,6 +32,9 @@ export default async function Page() {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
+        {/* Show verification banner if email is not confirmed */}
+        {data.user && !data.user.email_confirmed_at && <VerificationBanner />}
+
         <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4" />

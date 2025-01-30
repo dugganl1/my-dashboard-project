@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { Resend } from 'resend';
 import { EmailTemplate } from '@/components/email-templates/email-template';
+import { createCheckoutSession } from '@/lib/stripe/actions';
 
 // Add comprehensive debugging for environment variables
 console.log('Available environment variables:', Object.keys(process.env));
@@ -24,7 +25,9 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const token_hash = searchParams.get('token_hash');
   const type = searchParams.get('type') as EmailOtpType | null;
-  const next = searchParams.get('next') ?? '/dashboard'; // Default to dashboard
+  const plan = searchParams.get('plan');
+  const priceId = searchParams.get('priceId');
+  const billingCycle = searchParams.get('billingCycle');
 
   if (!token_hash || !type) {
     redirect('/auth/login?error=invalid-link');
@@ -41,26 +44,19 @@ export async function GET(request: NextRequest) {
     redirect('/auth/login?error=verification-failed');
   }
 
-  // Get user details after successful verification
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // If we have plan details, create checkout session
+  if (plan && priceId && billingCycle) {
+    const response = await createCheckoutSession({
+      planId: plan,
+      priceId: priceId,
+      billingCycle: billingCycle as 'monthly' | 'yearly',
+    });
 
-  if (user && resend) {
-    try {
-      await resend.emails.send({
-        from: 'Acme <onboarding@resend.dev>',
-        to: user.email!,
-        subject: 'Welcome to Acme!',
-        react: EmailTemplate({
-          firstName: user.user_metadata?.full_name?.split(' ')[0] || 'there',
-        }),
-      });
-    } catch (emailError) {
-      console.error('Failed to send welcome email:', emailError);
+    if (response?.sessionUrl) {
+      redirect(response.sessionUrl);
     }
   }
 
-  // Always redirect to dashboard on success
+  // Fallback to dashboard if no plan details
   redirect('/dashboard');
 }
