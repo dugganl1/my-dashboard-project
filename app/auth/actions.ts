@@ -3,43 +3,13 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { z } from 'zod';
 import { cookies } from 'next/headers';
-
-// Define server-side validation schemas
-const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(1),
-});
-
-const signupSchema = z.object({
-  email: z.string().email(),
-  password: z
-    .string()
-    .min(8)
-    .regex(/[A-Z]/, 'Must contain uppercase')
-    .regex(/[0-9]/, 'Must contain number')
-    .regex(/[^A-Za-z0-9]/, 'Must contain special character'),
-  fullName: z
-    .string()
-    .min(1)
-    .refine((name) => name.trim().split(/\s+/).length >= 2, {
-      message: 'Please enter both first and last name',
-    }),
-});
-
-const resetPasswordSchema = z.object({
-  email: z.string().email(),
-});
-
-const updatePasswordSchema = z.object({
-  password: z
-    .string()
-    .min(8)
-    .regex(/[A-Z]/, 'Must contain uppercase')
-    .regex(/[0-9]/, 'Must contain number')
-    .regex(/[^A-Za-z0-9]/, 'Must contain special character'),
-});
+import {
+  loginSchema,
+  signupSchema,
+  resetPasswordSchema,
+  updatePasswordSchema,
+} from '@/lib/validations/auth';
 
 export async function login(formData: FormData) {
   const redirectTo = formData.get('redirectTo') as string;
@@ -82,13 +52,12 @@ export async function signup(formData: FormData) {
   });
 
   if (!result.success) {
-    console.error('Validation error:', result.error);
     redirect('/error');
   }
 
   const supabase = await createClient();
 
-  const signUpData = {
+  const { error, data: userData } = await supabase.auth.signUp({
     email: result.data.email,
     password: result.data.password,
     options: {
@@ -96,27 +65,15 @@ export async function signup(formData: FormData) {
         full_name: result.data.fullName,
       },
     },
-  };
-
-  console.log('Attempting signup with:', {
-    email: signUpData.email,
-    // Don't log password
-    options: signUpData.options,
   });
 
-  const { error, data: userData } = await supabase.auth.signUp(signUpData);
-
   if (error) {
-    console.error('Supabase signup error:', error);
     redirect('/error');
   }
 
   // Store the email in the session for reference
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   cookieStore.set('pending_verification_email', userData?.user?.email ?? '', {
-    // Cookie options must match ResponseCookie type
-    value: userData?.user?.email ?? '',
-    name: 'pending_verification_email',
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
@@ -143,7 +100,6 @@ export async function signInWithGoogle() {
   });
 
   if (error) {
-    console.error('Google auth error:', error);
     redirect('/error');
   }
 
@@ -173,7 +129,6 @@ export async function resetPassword(formData: FormData) {
   );
 
   if (error) {
-    console.error('Password reset error:', error);
     redirect('/error');
   }
 
@@ -199,7 +154,6 @@ export async function updatePassword(formData: FormData) {
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    console.error('User verification error:', userError);
     redirect('/auth/login');
   }
 
@@ -208,7 +162,6 @@ export async function updatePassword(formData: FormData) {
   });
 
   if (error) {
-    console.error('Password update error:', error);
     redirect('/error');
   }
 
@@ -221,8 +174,8 @@ export async function updatePassword(formData: FormData) {
 
 export async function resendVerificationEmail() {
   const supabase = await createClient();
-  const session = cookies();
-  const email = session.get('pending_verification_email')?.value;
+  const cookieStore = await cookies();
+  const email = cookieStore.get('pending_verification_email')?.value;
 
   if (!email) {
     redirect('/auth/signup');
@@ -250,7 +203,6 @@ export async function savePlanSelection(formData: FormData) {
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    console.error('User not found:', userError);
     redirect('/auth/login');
   }
 
@@ -263,7 +215,6 @@ export async function savePlanSelection(formData: FormData) {
   });
 
   if (error) {
-    console.error('Error saving plan selection:', error);
     redirect('/error');
   }
 

@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -18,53 +17,20 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import Link from 'next/link';
-import { signup } from '@/app/auth/actions';
-import { signInWithGoogle } from '@/app/auth/actions';
-import { useRouter } from 'next/navigation';
-
-const formSchema = z.object({
-  fullName: z
-    .string()
-    .min(1, { message: '' })
-    .refine(
-      (name) => {
-        const words = name.trim().split(/\s+/);
-        return words.length >= 2;
-      },
-      { message: 'Please enter both your first and last name' }
-    ),
-  email: z
-    .string()
-    .min(1, { message: '' })
-    .email({ message: 'Please enter a valid email address' }),
-  password: z
-    .string()
-    .min(1, { message: '' })
-    .refine(
-      (password) => {
-        return (
-          password.length >= 8 &&
-          /[A-Z]/.test(password) &&
-          /[0-9]/.test(password) &&
-          /[^A-Za-z0-9]/.test(password)
-        );
-      },
-      { message: '' }
-    ),
-});
+import { signup, signInWithGoogle } from '@/app/auth/actions';
+import { signupSchema, type SignupFormValues } from '@/lib/validations/auth';
 
 export function SignUpForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<'div'>) {
-  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
   const [isEmailLoading, setIsEmailLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<SignupFormValues>({
+    resolver: zodResolver(signupSchema),
     defaultValues: {
       fullName: '',
       email: '',
@@ -73,7 +39,7 @@ export function SignUpForm({
     mode: 'onSubmit',
   });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: SignupFormValues) {
     setIsEmailLoading(true);
     try {
       const formData = new FormData();
@@ -82,9 +48,9 @@ export function SignUpForm({
       formData.append('fullName', values.fullName);
 
       await signup(formData);
-      router.push('/auth/signup/plan');
-    } catch (error) {
-      console.error('Signup error:', error);
+      // Server action handles redirect
+    } catch {
+      // Error handled by server action redirect
     } finally {
       setIsEmailLoading(false);
     }
@@ -94,8 +60,9 @@ export function SignUpForm({
     setIsGoogleLoading(true);
     try {
       await signInWithGoogle();
-    } catch (error) {
-      console.error('Google sign up error:', error);
+      // Server action handles redirect
+    } catch {
+      // Error handled by server action redirect
     } finally {
       setIsGoogleLoading(false);
     }
