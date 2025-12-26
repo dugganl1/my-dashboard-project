@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { AppSidebar } from '@/components/app-sidebar';
-import { VerificationBanner } from '@/components/verification_banner';
+import { VerificationBanner } from '@/components/verification-banner';
 import {
   Breadcrumb,
   BreadcrumbItem,

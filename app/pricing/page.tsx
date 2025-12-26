@@ -1,51 +1,6 @@
 import { NavBar } from '@/components/nav-bar';
 import { PricingCard } from '@/components/pricing-card';
-
-const pricingPlans = [
-  {
-    name: 'Day Pass',
-    description: 'Perfect for side projects and learning',
-    price: 5,
-    features: [
-      'Up to 3 projects',
-      '1GB storage',
-      'Basic analytics',
-      'Community support',
-    ],
-    cta: 'Get Started',
-    popular: false,
-  },
-  {
-    name: 'Monthly Subscription',
-    description: 'For professional developers and small teams',
-    price: 5,
-    features: [
-      'Unlimited projects',
-      '10GB storage',
-      'Advanced analytics',
-      'Priority support',
-      'Custom domains',
-      'Team collaboration',
-    ],
-    cta: 'Get started',
-    popular: true,
-  },
-  {
-    name: 'Lifetime Membership',
-    description: 'For large teams with advanced needs',
-    price: 49,
-    features: [
-      'Unlimited everything',
-      'Advanced security',
-      'Custom integrations',
-      '24/7 phone support',
-      'SLA guarantee',
-      'Dedicated account manager',
-    ],
-    cta: 'Talk to Sales',
-    popular: false,
-  },
-];
+import { PLANS_LIST } from '@/lib/stripe/config';
 
 export default function PricingPage() {
   return (
@@ -62,8 +17,18 @@ export default function PricingPage() {
           </p>
         </div>
         <div className="mx-auto mt-16 grid max-w-lg grid-cols-1 gap-6 sm:mt-20 lg:max-w-none lg:grid-cols-3">
-          {pricingPlans.map((plan) => (
-            <PricingCard key={plan.name} {...plan} />
+          {PLANS_LIST.map((plan) => (
+            <PricingCard
+              key={plan.id}
+              name={plan.name}
+              description={plan.description}
+              price={
+                typeof plan.price === 'number' ? plan.price : plan.price.monthly
+              }
+              features={plan.features}
+              cta={plan.cta}
+              popular={plan.popular}
+            />
           ))}
         </div>
       </main>
