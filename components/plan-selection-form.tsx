@@ -8,11 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
-import {
-  createCheckoutSession,
-  getPlanPriceId,
-} from '@/app/api/stripe/actions';
-import { STRIPE_PLANS } from '@/lib/stripe/config';
+import { getPlanPriceId } from '@/app/api/stripe/actions';
+import { PLANS } from '@/lib/stripe/config';
 
 interface PlanSelectionFormProps {
   className?: string;
@@ -23,7 +20,7 @@ export function PlanSelectionForm({ className }: PlanSelectionFormProps) {
   const [isYearly, setIsYearly] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const plans = Object.entries(STRIPE_PLANS).map(([id, plan]) => ({
+  const plans = Object.entries(PLANS).map(([id, plan]) => ({
     id,
     name: plan.name,
     price: plan.price,
